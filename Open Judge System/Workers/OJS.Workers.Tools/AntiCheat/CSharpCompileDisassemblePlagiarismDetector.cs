@@ -8,26 +8,21 @@
     using OJS.Workers.Compilers;
     using OJS.Workers.Tools.Similarity;
 
-    public class CSharpCompileDecompilePlagiarismDetector : IPlagiarismDetector
+    public class CSharpCompileDisassemblePlagiarismDetector : IPlagiarismDetector
     {
         private readonly string csharpCompilerPath;
-
         private readonly string dotNetDisassemblerPath;
-
         private readonly CSharpCompiler csharpCompiler;
-
         private readonly DotNetDisassembler dotNetDisassembler;
-
         private readonly ISimilarityFinder similarityFinder;
-
         private readonly IDictionary<string, string> sourcesCache;
 
-        public CSharpCompileDecompilePlagiarismDetector(string csharpCompilerPath, string dotNetDisassemblerPath)
+        public CSharpCompileDisassemblePlagiarismDetector(string csharpCompilerPath, string dotNetDisassemblerPath)
             : this(csharpCompilerPath, dotNetDisassemblerPath, new SimilarityFinder())
         {
         }
 
-        public CSharpCompileDecompilePlagiarismDetector(string csharpCompilerPath, string dotNetDisassemblerPath, ISimilarityFinder similarityFinder)
+        public CSharpCompileDisassemblePlagiarismDetector(string csharpCompilerPath, string dotNetDisassemblerPath, ISimilarityFinder similarityFinder)
         {
             this.csharpCompilerPath = csharpCompilerPath;
             this.dotNetDisassemblerPath = dotNetDisassemblerPath;
@@ -69,11 +64,11 @@
             var percentage = ((decimal)differencesCount * 100) / textLength;
 
             return new PlagiarismResult(percentage)
-                       {
-                           Differences = differences,
-                           FirstToCompare = firstFileContent,
-                           SecondToCompare = secondFileContent
-                       };
+            {
+                Differences = differences,
+                FirstToCompare = firstFileContent,
+                SecondToCompare = secondFileContent
+            };
         }
 
         private bool GetCilCode(string originalSource, out string fileContent)
@@ -88,7 +83,10 @@
             fileContent = null;
 
             var sourceFilePath = FileHelpers.SaveStringToTempFile(originalSource);
-            var compileResult = this.csharpCompiler.Compile(this.csharpCompilerPath, sourceFilePath, "/optimize+ /nologo /reference:System.Numerics.dll /reference:PowerCollections.dll");
+            var compileResult = this.csharpCompiler.Compile(
+                this.csharpCompilerPath,
+                sourceFilePath,
+                "/optimize+ /nologo /reference:System.Numerics.dll /reference:PowerCollections.dll");
             File.Delete(sourceFilePath);
             if (!compileResult.IsCompiledSuccessfully)
             {
