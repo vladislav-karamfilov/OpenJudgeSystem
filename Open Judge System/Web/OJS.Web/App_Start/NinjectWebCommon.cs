@@ -71,9 +71,9 @@ namespace OJS.Web
         private static void RegisterServices(IKernel kernel)
         {
             kernel.Bind<IOjsData>().To<OjsData>();
-            kernel.Bind<IPlagiarismDetector>().To<CSharpCompileDisassemblePlagiarismDetector>()
-                .WithConstructorArgument("csharpCompilerPath", Settings.CSharpCompilerPath)
-                .WithConstructorArgument("dotNetDisassemblerPath", Settings.DotNetDisassemblerPath);
+            kernel.Bind<IPlagiarismDetector>().To<JavaCompileDisassemblePlagiarismDetector>()
+                .WithConstructorArgument("csharpCompilerPath", Settings.JavaCompilerPath)
+                .WithConstructorArgument("dotNetDisassemblerPath", Settings.JavaDisassemblerPath);
         }
     }
 }
