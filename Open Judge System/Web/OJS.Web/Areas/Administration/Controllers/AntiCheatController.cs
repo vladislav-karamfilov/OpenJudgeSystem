@@ -45,9 +45,9 @@
                 foreach (var ip in ipsToExclude)
                 {
                     withoutExcludeIps = withoutExcludeIps.Where(
-                        p => p.ContestId == id 
-                        && p.IsOfficial 
-                        && p.Submissions.AsQueryable().Count() > 1 
+                        p => p.ContestId == id
+                        && p.IsOfficial
+                        && p.Submissions.AsQueryable().Count() > 1
                         && p.Submissions.AsQueryable()
                             .Where(s => !s.IsDeleted && s.IpAddress != null)
                             .All(s => s.IpAddress != ip));
@@ -101,7 +101,10 @@
                 {
                     for (int j = i + 1; j < groupAsList.Count; j++)
                     {
-                        var result = this.plagiarismDetector.DetectPlagiarism(groupAsList[i].Content.Decompress(), groupAsList[j].Content.Decompress(), new List<IDetectPlagiarismVisitor> { new SortAndTrimLinesVisitor() });
+                        var result = this.plagiarismDetector.DetectPlagiarism(
+                            groupAsList[i].Content.Decompress(),
+                            groupAsList[j].Content.Decompress(),
+                            new IDetectPlagiarismVisitor[] { new SortAndTrimLinesVisitor() });
 
                         bool save = true;
                         var firstTestRuns = groupAsList[i].TestRuns.ToList();
