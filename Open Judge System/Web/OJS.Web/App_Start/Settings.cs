@@ -21,6 +21,22 @@
             }
         }
 
+        public static string JavaCompilerPath
+        {
+            get
+            {
+                return GetSetting("JavaCompilerPath");
+            }
+        }
+
+        public static string JavaDisassemblerPath
+        {
+            get
+            {
+                return GetSetting("JavaDisassemblerPath");
+            }
+        }
+
         private static string GetSetting(string settingName)
         {
             if (ConfigurationManager.AppSettings[settingName] == null)
