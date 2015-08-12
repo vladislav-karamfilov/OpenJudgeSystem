@@ -73,8 +73,8 @@ namespace OJS.Web
         {
             kernel.Bind<IOjsData>().To<OjsData>();
             kernel.Bind<IPlagiarismDetector>().To<JavaCompileDisassemblePlagiarismDetector>()
-                .WithConstructorArgument("csharpCompilerPath", Settings.JavaCompilerPath)
-                .WithConstructorArgument("dotNetDisassemblerPath", Settings.JavaDisassemblerPath);
+                .WithConstructorArgument("javaCompilerPath", Settings.JavaCompilerPath)
+                .WithConstructorArgument("javaDisassemblerPath", Settings.JavaDisassemblerPath);
         }
     }
 }
