@@ -18,5 +18,13 @@
             File.WriteAllBytes(tempFilePath, dataToWrite);
             return tempFilePath;
         }
+
+        public static void SafeDelete(string filePath)
+        {
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+        }
     }
 }
