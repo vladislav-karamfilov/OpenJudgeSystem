@@ -41,8 +41,8 @@
   <ItemGroup>
     <Compile Include="AntiCheat\CompileDisassemblePlagiarismDetector.cs" />
     <Compile Include="AntiCheat\CSharpCompileDisassemblePlagiarismDetector.cs" />
-    <Compile Include="AntiCheat\IDetectPlagiarismVisitor.cs" />
-    <Compile Include="AntiCheat\IPlagiarismDetector.cs" />
+    <Compile Include="AntiCheat\Contracts\IDetectPlagiarismVisitor.cs" />
+    <Compile Include="AntiCheat\Contracts\IPlagiarismDetector.cs" />
     <Compile Include="AntiCheat\JavaCompileDisassemblePlagiarismDetector.cs" />
     <Compile Include="AntiCheat\PlagiarismResult.cs" />
     <Compile Include="AntiCheat\PlainTextPlagiarismDetector.cs" />
