@@ -14,6 +14,7 @@ namespace OJS.Web
 
     using OJS.Data;
     using OJS.Workers.Tools.AntiCheat;
+    using OJS.Workers.Tools.AntiCheat.Contracts;
 
     public static class NinjectWebCommon
     {

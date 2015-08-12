@@ -3,6 +3,7 @@
     using System.Collections.Generic;
     using System.Linq;
 
+    using OJS.Workers.Tools.AntiCheat.Contracts;
     using OJS.Workers.Tools.Similarity;
 
     public class PlainTextPlagiarismDetector : IPlagiarismDetector

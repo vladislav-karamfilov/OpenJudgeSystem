@@ -6,6 +6,7 @@
 
     using OJS.Common.Extensions;
     using OJS.Workers.Compilers;
+    using OJS.Workers.Tools.AntiCheat.Contracts;
     using OJS.Workers.Tools.Similarity;
 
     public class CSharpCompileDisassemblePlagiarismDetector : IPlagiarismDetector

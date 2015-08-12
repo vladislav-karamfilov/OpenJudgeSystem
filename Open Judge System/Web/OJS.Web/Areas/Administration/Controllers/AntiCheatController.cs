@@ -12,6 +12,7 @@
     using OJS.Web.Areas.Administration.ViewModels.AntiCheat;
     using OJS.Web.Controllers;
     using OJS.Workers.Tools.AntiCheat;
+    using OJS.Workers.Tools.AntiCheat.Contracts;
 
     public class AntiCheatController : AdministrationController
     {
