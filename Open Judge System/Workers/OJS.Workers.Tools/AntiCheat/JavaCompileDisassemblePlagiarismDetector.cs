@@ -1,16 +1,18 @@
 ﻿namespace OJS.Workers.Tools.AntiCheat
 {
-    using System;
-
-    using OJS.Common.Models;
+    using OJS.Common.Extensions;
     using OJS.Workers.Common;
+    using OJS.Workers.Common.Helpers;
     using OJS.Workers.Compilers;
     using OJS.Workers.Tools.Similarity;
 
     public class JavaCompileDisassemblePlagiarismDetector : CompileDisassemblePlagiarismDetector
     {
+        private const string JavaDisassemblerAdditionalArguments = "-c -p";
+
         private readonly string javaCompilerPath;
         private readonly string javaDisassemblerPath;
+        private readonly string workingDirectory;
 
         public JavaCompileDisassemblePlagiarismDetector(string javaCompilerPath, string javaDisassemblerPath)
             : this(javaCompilerPath, javaDisassemblerPath, new SimilarityFinder())
@@ -22,16 +24,30 @@
         {
             this.javaCompilerPath = javaCompilerPath;
             this.javaDisassemblerPath = javaDisassemblerPath;
+            this.workingDirectory = DirectoryHelpers.CreateTempDirectory();
         }
 
-        protected override CompileResult CompileCode(string sourceCodeFilePath)
+        ~JavaCompileDisassemblePlagiarismDetector()
         {
-            throw new NotImplementedException();
+            DirectoryHelpers.SafeDeleteDirectory(this.workingDirectory);
         }
 
-        protected override CompileResult DisassembleCode(string compiledCodeFilePath)
+        protected override CompileResult CompileCode(string sourceCode)
         {
-            throw new NotImplementedException();
+            var sourceFilePath = JavaCodePreprocessorHelper.PrepareSubmissionFile(sourceCode, this.workingDirectory);
+            var compileResult = this.Compiler.Compile(this.javaCompilerPath, sourceFilePath, null);
+
+            return compileResult;
+        }
+
+        protected override CompileResult DisassembleFile(string compiledFilePath)
+        {
+            var disassemblerResult = this.Disassembler.Compile(
+                this.javaDisassemblerPath,
+                compiledFilePath,
+                JavaDisassemblerAdditionalArguments);
+            
+            return disassemblerResult;
         }
     }
 }
