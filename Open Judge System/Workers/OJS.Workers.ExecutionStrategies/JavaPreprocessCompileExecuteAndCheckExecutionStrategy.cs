@@ -3,18 +3,16 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Text.RegularExpressions;
 
     using OJS.Common.Extensions;
     using OJS.Common.Models;
     using OJS.Workers.Checkers;
     using OJS.Workers.Common;
+    using OJS.Workers.Common.Helpers;
     using OJS.Workers.Executors;
 
     public class JavaPreprocessCompileExecuteAndCheckExecutionStrategy : ExecutionStrategy
     {
-        private const string PackageNameRegEx = @"\bpackage\s+[a-zA-Z_][a-zA-Z_.0-9]{0,150}\s*;";
-        private const string ClassNameRegEx = @"public\s+class\s+([a-zA-Z_][a-zA-Z_0-9]{0,50})\s*{";
         private const string TimeMeasurementFileName = "_time.txt";
         private const string SandboxExecutorClassName = "_$SandboxExecutor";
 
@@ -159,7 +157,7 @@ class _$SandboxSecurityManager extends SecurityManager {
             string submissionFilePath;
             try
             {
-                submissionFilePath = this.CreateSubmissionFile(executionContext.Code);
+                submissionFilePath = JavaCodePreprocessorHelper.PrepareSubmissionFile(executionContext.Code, this.workingDirectory);
             }
             catch (ArgumentException exception)
             {
@@ -240,26 +238,6 @@ class _$SandboxSecurityManager extends SecurityManager {
 
                 File.Delete(timeMeasurementFilePath);
             }
-        }
-
-        private string CreateSubmissionFile(string submissionCode)
-        {
-            // Remove existing packages
-            submissionCode = Regex.Replace(submissionCode, PackageNameRegEx, string.Empty);
-
-            // TODO: Remove the restriction for one public class - a non-public Java class can contain the main method!
-            var classNameMatch = Regex.Match(submissionCode, ClassNameRegEx);
-            if (!classNameMatch.Success)
-            {
-                throw new ArgumentException("No valid public class found!");
-            }
-
-            var className = classNameMatch.Groups[1].Value;
-            var submissionFilePath = string.Format("{0}\\{1}", this.workingDirectory, className);
-
-            File.WriteAllText(submissionFilePath, submissionCode);
-
-            return submissionFilePath;
         }
 
         private CompileResult CompileSourceFiles(CompilerType compilerType, string compilerPath, string compilerArguments, IEnumerable<string> sourceFilesToCompile)
