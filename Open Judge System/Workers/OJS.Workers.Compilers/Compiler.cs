@@ -182,8 +182,15 @@
                             return "Could not start compiler.";
                         }
 
-                        process.BeginOutputReadLine();
-                        process.BeginErrorReadLine();
+                        if (compilerProcessStartInfo.RedirectStandardOutput)
+                        {
+                            process.BeginOutputReadLine();
+                        }
+
+                        if (compilerProcessStartInfo.RedirectStandardError)
+                        {
+                            process.BeginErrorReadLine();
+                        }
 
                         var exited = process.WaitForExit(CompilerProcessExitTimeOut);
                         if (!exited)
