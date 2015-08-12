@@ -10,7 +10,7 @@
 
             arguments.Append(additionalArguments);
 
-            arguments.AppendFormat(" {0} > {1}", inputFile, outputFile);
+            arguments.AppendFormat(" \"{0}\" > \"{1}\"", inputFile, outputFile);
 
             return arguments.ToString();
         }
