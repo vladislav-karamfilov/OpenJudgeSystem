@@ -4,6 +4,7 @@
     using System.IO;
     using System.Linq;
 
+    using OJS.Common.Extensions;
     using OJS.Workers.Common;
     using OJS.Workers.Tools.AntiCheat.Contracts;
     using OJS.Workers.Tools.Similarity;
@@ -89,7 +90,7 @@
 
             disassembledCode = File.ReadAllText(disassemblerResult.OutputFile);
             this.sourcesCache.Add(source, disassembledCode);
-            File.Delete(disassemblerResult.OutputFile);
+            FileHelpers.SafeDelete(disassemblerResult.OutputFile);
             return true;
         }
 
