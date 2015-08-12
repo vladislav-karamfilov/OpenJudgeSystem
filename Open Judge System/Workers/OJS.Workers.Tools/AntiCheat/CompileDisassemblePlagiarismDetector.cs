@@ -4,9 +4,7 @@
     using System.IO;
     using System.Linq;
 
-    using OJS.Common.Extensions;
     using OJS.Workers.Common;
-    using OJS.Workers.Compilers;
     using OJS.Workers.Tools.AntiCheat.Contracts;
     using OJS.Workers.Tools.Similarity;
 
@@ -29,14 +27,14 @@
 
         public PlagiarismResult DetectPlagiarism(string firstSource, string secondSource, IEnumerable<IDetectPlagiarismVisitor> visitors = null)
         {
-            string firstFileContent;
-            if (!this.GetDisassembledCode(firstSource, out firstFileContent))
+            string firstDisassembledCode;
+            if (!this.GetDisassembledCode(firstSource, out firstDisassembledCode))
             {
                 return new PlagiarismResult(0);
             }
 
-            string secondFileContent;
-            if (!this.GetDisassembledCode(secondSource, out secondFileContent))
+            string secondDisassembledCode;
+            if (!this.GetDisassembledCode(secondSource, out secondDisassembledCode))
             {
                 return new PlagiarismResult(0);
             }
@@ -45,15 +43,15 @@
             {
                 foreach (var visitor in visitors)
                 {
-                    firstFileContent = visitor.Visit(firstFileContent);
-                    secondFileContent = visitor.Visit(secondFileContent);
+                    firstDisassembledCode = visitor.Visit(firstDisassembledCode);
+                    secondDisassembledCode = visitor.Visit(secondDisassembledCode);
                 }
             }
 
-            var differences = this.similarityFinder.DiffText(firstFileContent, secondFileContent, true, true, true);
+            var differences = this.similarityFinder.DiffText(firstDisassembledCode, secondDisassembledCode, true, true, true);
 
             var differencesCount = differences.Sum(difference => difference.DeletedA + difference.InsertedB);
-            var textLength = firstFileContent.Length + secondFileContent.Length;
+            var textLength = firstDisassembledCode.Length + secondDisassembledCode.Length;
 
             // TODO: Revert the percentage
             var percentage = ((decimal)differencesCount * 100) / textLength;
@@ -61,8 +59,8 @@
             return new PlagiarismResult(percentage)
             {
                 Differences = differences,
-                FirstToCompare = firstFileContent,
-                SecondToCompare = secondFileContent
+                FirstToCompare = firstDisassembledCode,
+                SecondToCompare = secondDisassembledCode
             };
         }
 
@@ -77,16 +75,13 @@
             // TODO: Check for undeleted temporary files.
             disassembledCode = null;
 
-            var sourceFilePath = this.PrepareFileToCompile(source);
-            var compileResult = this.CompileCode(sourceFilePath);
-            File.Delete(sourceFilePath);
+            var compileResult = this.CompileCode(source);
             if (!compileResult.IsCompiledSuccessfully)
             {
                 return false;
             }
 
-            var disassemblerResult = this.DisassembleCode(compileResult.OutputFile);
-            File.Delete(compileResult.OutputFile);
+            var disassemblerResult = this.DisassembleFile(compileResult.OutputFile);
             if (!disassemblerResult.IsCompiledSuccessfully)
             {
                 return false;
@@ -98,13 +93,8 @@
             return true;
         }
 
-        protected virtual string PrepareFileToCompile(string source)
-        {
-            return FileHelpers.SaveStringToTempFile(source);
-        }
+        protected abstract CompileResult CompileCode(string sourceCode);
 
-        protected abstract CompileResult CompileCode(string sourceCodeFilePath);
-
-        protected abstract CompileResult DisassembleCode(string compiledCodeFilePath);
+        protected abstract CompileResult DisassembleFile(string compiledFilePath);
     }
 }
