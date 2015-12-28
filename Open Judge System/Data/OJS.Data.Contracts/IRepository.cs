@@ -5,7 +5,8 @@
     using System.Linq;
     using System.Linq.Expressions;
 
-    public interface IRepository<T> where T : class
+    public interface IRepository<T>
+        where T : class
     {
         IQueryable<T> All();
 
@@ -13,7 +14,7 @@
 
         void Add(T entity);
 
-        /// <remarks>Use only in transaction scope</remarks>
+        // Use only in transaction scope
         void Add(IEnumerable<T> entities);
 
         void Update(T entity);

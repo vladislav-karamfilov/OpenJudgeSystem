@@ -45,18 +45,14 @@
         /// </remarks>
         public string FileExtension { get; set; }
 
+        public byte[] SolutionSkeleton { get; set; }
+
         [StringLength(GlobalConstants.IpAdressMaxLength)]
         [Column(TypeName = "varchar")]
         public string IpAddress { get; set; }
 
         [NotMapped]
-        public bool IsBinaryFile
-        {
-            get
-            {
-                return !string.IsNullOrWhiteSpace(this.FileExtension);
-            }
-        }
+        public bool IsBinaryFile => !string.IsNullOrWhiteSpace(this.FileExtension);
 
         [NotMapped]
         public string ContentAsString

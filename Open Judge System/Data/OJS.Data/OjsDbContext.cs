@@ -62,13 +62,7 @@
 
         public virtual IDbSet<AccessLog> AccessLogs { get; set; }
 
-        public DbContext DbContext
-        {
-            get
-            {
-                return this;
-            }
-        }
+        public DbContext DbContext => this;
 
         public override int SaveChanges()
         {
@@ -81,7 +75,7 @@
             /*
             // Possible solution to foreign key deletes: http://www.ridgway.co.za/articles/174.aspx
             // The above solution does not work with cyclic relations.
-            */ 
+            */
 
             this.SaveChanges();
             var tableNames =
@@ -128,7 +122,8 @@
             this.SaveChanges();
         }
 
-        public new IDbSet<T> Set<T>() where T : class
+        public new IDbSet<T> Set<T>()
+            where T : class
         {
             return base.Set<T>();
         }

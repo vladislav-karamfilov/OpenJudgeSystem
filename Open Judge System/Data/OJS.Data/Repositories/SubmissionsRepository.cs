@@ -1,7 +1,6 @@
 ﻿namespace OJS.Data.Repositories
 {
     using System;
-    using System.Collections.Generic;
     using System.Data.Entity;
     using System.Linq;
 
@@ -25,7 +24,7 @@
                     && x.Problem.Contest.IsVisible && !x.Problem.Contest.IsDeleted
                     && x.Problem.ShowResults);
         }
-        
+
         public Submission GetSubmissionForProcessing()
         {
             var submission =

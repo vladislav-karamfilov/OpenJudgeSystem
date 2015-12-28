@@ -46,14 +46,8 @@
         [Column("JobTitle")]
         [MaxLength(GlobalConstants.JobTitleMaxLenth)]
         public string JobTitle { get; set; }
-        
+
         [NotMapped]
-        public byte? Age
-        {
-            get
-            {
-                return Calculator.Age(this.DateOfBirth);
-            }
-        }
+        public byte? Age => Calculator.Age(this.DateOfBirth);
     }
 }

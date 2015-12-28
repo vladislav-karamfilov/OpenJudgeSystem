@@ -3,6 +3,11 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
+<<<<<<< HEAD
+=======
+    using System.Text;
+    using System.Text.RegularExpressions;
+>>>>>>> d950c5b9a0b2cbf3ded04d91a5ec04f92c5b3d8d
 
     using OJS.Common.Extensions;
     using OJS.Common.Models;
@@ -13,35 +18,45 @@
 
     public class JavaPreprocessCompileExecuteAndCheckExecutionStrategy : ExecutionStrategy
     {
+<<<<<<< HEAD
         private const string TimeMeasurementFileName = "_time.txt";
+=======
+        private const string PackageNameRegEx = @"\bpackage\s+[a-zA-Z_][a-zA-Z_.0-9]{0,150}\s*;";
+        private const string ClassNameRegEx = @"public\s+class\s+([a-zA-Z_][a-zA-Z_0-9]{0,150})\s*{";
+        private const string TimeMeasurementFileName = "_$time.txt";
+>>>>>>> d950c5b9a0b2cbf3ded04d91a5ec04f92c5b3d8d
         private const string SandboxExecutorClassName = "_$SandboxExecutor";
+        private const string JavaCompiledFileExtension = ".class";
+        private const int ClassNameRegExGroup = 1;
 
         private readonly string javaExecutablePath;
-        private readonly string workingDirectory;
-        private readonly Func<CompilerType, string> getCompilerPathFunc;
 
         public JavaPreprocessCompileExecuteAndCheckExecutionStrategy(string javaExecutablePath, Func<CompilerType, string> getCompilerPathFunc)
         {
             if (!File.Exists(javaExecutablePath))
             {
-                throw new ArgumentException(string.Format("Java not found in: {0}!", javaExecutablePath), "javaExecutablePath");
+                throw new ArgumentException($"Java not found in: {javaExecutablePath}!", nameof(javaExecutablePath));
             }
 
             this.javaExecutablePath = javaExecutablePath;
-            this.workingDirectory = DirectoryHelpers.CreateTempDirectory();
-            this.getCompilerPathFunc = getCompilerPathFunc;
+            this.WorkingDirectory = DirectoryHelpers.CreateTempDirectory();
+            this.GetCompilerPathFunc = getCompilerPathFunc;
+            this.SandboxExecutorSourceFilePath =
+                $"{this.WorkingDirectory}\\{SandboxExecutorClassName}.{CompilerType.Java.GetFileExtension()}";
         }
 
         ~JavaPreprocessCompileExecuteAndCheckExecutionStrategy()
         {
-            DirectoryHelpers.SafeDeleteDirectory(this.workingDirectory, true);
+            DirectoryHelpers.SafeDeleteDirectory(this.WorkingDirectory, true);
         }
 
-        private string SandboxExecutorCode
-        {
-            get
-            {
-                return @"
+        protected string WorkingDirectory { get; }
+
+        protected Func<CompilerType, string> GetCompilerPathFunc { get; }
+
+        protected string SandboxExecutorSourceFilePath { get; }
+
+        private string SandboxExecutorCode => @"
 import java.io.File;
 import java.io.FilePermission;
 import java.io.FileWriter;
@@ -95,6 +110,7 @@ public class " + SandboxExecutorClassName + @" {
 class _$SandboxSecurityManager extends SecurityManager {
     private static final String JAVA_HOME_DIR = System.getProperty(""java.home"");
     private static final String USER_DIR = System.getProperty(""user.dir"");
+    private static final String EXECUTING_FILE_PATH = _$SandboxSecurityManager.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 
     @Override
     public void checkPermission(Permission permission) {
@@ -105,14 +121,17 @@ class _$SandboxSecurityManager extends SecurityManager {
 
         if (permission instanceof FilePermission) {
             FilePermission filePermission = (FilePermission) permission;
-            String filePath = filePermission.getName();
-            File file = new File(filePath);
-            if ((file.getPath().startsWith(JAVA_HOME_DIR) || file.getPath().startsWith(USER_DIR)) &&
-                    filePermission.getActions().equals(""read"")) {
-                // Allow reading Java system directories and user directories
-                return;
+            String fileName = filePermission.getName();
+            String filePath = new File(fileName).getPath();
+
+            if (filePermission.getActions().equals(""read"") &&
+                    (filePath.startsWith(JAVA_HOME_DIR) ||
+                        filePath.startsWith(USER_DIR) ||
+                        filePath.startsWith(new File(EXECUTING_FILE_PATH).getPath()))) {
+                    // Allow reading Java system directories and user directories
+                    return;
+                }
             }
-        }
 
         if (permission instanceof NetPermission) {
             if (permission.getName().equals(""specifyStreamHandler"")) {
@@ -146,18 +165,23 @@ class _$SandboxSecurityManager extends SecurityManager {
         throw new UnsupportedOperationException();
     }
 }";
-            }
-        }
 
         public override ExecutionResult Execute(ExecutionContext executionContext)
         {
             var result = new ExecutionResult();
 
+            // Copy the sandbox executor source code to a file in the working directory
+            File.WriteAllText(this.SandboxExecutorSourceFilePath, this.SandboxExecutorCode);
+
             // Create a temp file with the submission code
             string submissionFilePath;
             try
             {
+<<<<<<< HEAD
                 submissionFilePath = JavaCodePreprocessorHelper.PrepareSubmissionFile(executionContext.Code, this.workingDirectory);
+=======
+                submissionFilePath = this.CreateSubmissionFile(executionContext);
+>>>>>>> d950c5b9a0b2cbf3ded04d91a5ec04f92c5b3d8d
             }
             catch (ArgumentException exception)
             {
@@ -167,17 +191,7 @@ class _$SandboxSecurityManager extends SecurityManager {
                 return result;
             }
 
-            // Create a sandbox executor source file in the working directory
-            var sandboxExecutorSourceFilePath = string.Format("{0}\\{1}", this.workingDirectory, SandboxExecutorClassName);
-            File.WriteAllText(sandboxExecutorSourceFilePath, this.SandboxExecutorCode);
-
-            // Compile all source files - sandbox executor and submission file
-            var compilerPath = this.getCompilerPathFunc(executionContext.CompilerType);
-            var compilerResult = this.CompileSourceFiles(
-                executionContext.CompilerType,
-                compilerPath,
-                executionContext.AdditionalCompilerArguments,
-                new[] { submissionFilePath, sandboxExecutorSourceFilePath });
+            var compilerResult = this.DoCompile(executionContext, submissionFilePath);
 
             // Assign compiled result info to the execution result
             result.IsCompiledSuccessfully = compilerResult.IsCompiledSuccessfully;
@@ -188,12 +202,16 @@ class _$SandboxSecurityManager extends SecurityManager {
             }
 
             // Prepare execution process arguments and time measurement info
-            var classPathArgument = string.Format("-classpath \"{0}\"", this.workingDirectory);
+            var classPathArgument = $"-classpath \"{this.WorkingDirectory}\"";
 
-            var submissionFilePathLastIndexOfSlash = submissionFilePath.LastIndexOf('\\');
-            var classToExecute = submissionFilePath.Substring(submissionFilePathLastIndexOfSlash + 1);
+            var classToExecuteFilePath = compilerResult.OutputFile;
+            var classToExecute = classToExecuteFilePath
+                .Substring(
+                    this.WorkingDirectory.Length + 1,
+                    classToExecuteFilePath.Length - this.WorkingDirectory.Length - JavaCompiledFileExtension.Length - 1)
+                .Replace('\\', '.');
 
-            var timeMeasurementFilePath = string.Format("{0}\\{1}", this.workingDirectory, TimeMeasurementFileName);
+            var timeMeasurementFilePath = $"{this.WorkingDirectory}\\{TimeMeasurementFileName}";
 
             // Create an executor and a checker
             var executor = new StandardProcessExecutor();
@@ -207,7 +225,7 @@ class _$SandboxSecurityManager extends SecurityManager {
                     test.Input,
                     executionContext.TimeLimit,
                     executionContext.MemoryLimit,
-                    new[] { classPathArgument, SandboxExecutorClassName, classToExecute, string.Format("\"{0}\"", timeMeasurementFilePath) });
+                    new[] { classPathArgument, SandboxExecutorClassName, classToExecute, $"\"{timeMeasurementFilePath}\"" });
 
                 UpdateExecutionTime(timeMeasurementFilePath, processExecutionResult, executionContext.TimeLimit);
 
@@ -216,6 +234,42 @@ class _$SandboxSecurityManager extends SecurityManager {
             }
 
             return result;
+        }
+
+        protected virtual string CreateSubmissionFile(ExecutionContext executionContext)
+        {
+            var submissionCode = executionContext.Code;
+
+            // Remove existing packages
+            submissionCode = Regex.Replace(submissionCode, PackageNameRegEx, string.Empty);
+
+            // TODO: Remove the restriction for one public class - a non-public Java class can contain the main method!
+            var classNameMatch = Regex.Match(submissionCode, ClassNameRegEx);
+            if (!classNameMatch.Success)
+            {
+                throw new ArgumentException("No valid public class found!");
+            }
+
+            var className = classNameMatch.Groups[ClassNameRegExGroup].Value;
+            var submissionFilePath = $"{this.WorkingDirectory}\\{className}";
+
+            File.WriteAllText(submissionFilePath, submissionCode);
+
+            return submissionFilePath;
+        }
+
+        protected virtual CompileResult DoCompile(ExecutionContext executionContext, string submissionFilePath)
+        {
+            var compilerPath = this.GetCompilerPathFunc(executionContext.CompilerType);
+
+            // Compile all source files - sandbox executor and submission file
+            var compilerResult = this.CompileSourceFiles(
+                executionContext.CompilerType,
+                compilerPath,
+                executionContext.AdditionalCompilerArguments,
+                new[] { this.SandboxExecutorSourceFilePath, submissionFilePath });
+
+            return compilerResult;
         }
 
         private static void UpdateExecutionTime(string timeMeasurementFilePath, ProcessExecutionResult processExecutionResult, int timeLimit)
@@ -242,16 +296,23 @@ class _$SandboxSecurityManager extends SecurityManager {
 
         private CompileResult CompileSourceFiles(CompilerType compilerType, string compilerPath, string compilerArguments, IEnumerable<string> sourceFilesToCompile)
         {
-            CompileResult compilerResult = null;
+            var compilerResult = new CompileResult(false, null);
+            var compilerCommentBuilder = new StringBuilder();
+
             foreach (var sourceFile in sourceFilesToCompile)
             {
                 compilerResult = this.Compile(compilerType, compilerPath, compilerArguments, sourceFile);
+
+                compilerCommentBuilder.AppendLine(compilerResult.CompilerComment);
 
                 if (!compilerResult.IsCompiledSuccessfully)
                 {
                     break; // The compilation of other files is not necessary
                 }
             }
+
+            var compilerComment = compilerCommentBuilder.ToString().Trim();
+            compilerResult.CompilerComment = compilerComment.Length > 0 ? compilerComment : null;
 
             return compilerResult;
         }

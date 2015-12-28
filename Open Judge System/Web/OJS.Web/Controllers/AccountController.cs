@@ -40,13 +40,7 @@
 
         public UserManager<UserProfile> UserManager { get; private set; }
 
-        private IAuthenticationManager AuthenticationManager
-        {
-            get
-            {
-                return this.HttpContext.GetOwinContext().Authentication;
-            }
-        }
+        private IAuthenticationManager AuthenticationManager => this.HttpContext.GetOwinContext().Authentication;
 
         // GET: /Account/Login
         [AllowAnonymous]
@@ -184,11 +178,8 @@
             else
             {
                 // User does not have a password so remove any validation errors caused by a missing OldPassword field
-                ModelState state = this.ModelState["OldPassword"];
-                if (state != null)
-                {
-                    state.Errors.Clear();
-                }
+                var state = this.ModelState["OldPassword"];
+                state?.Errors.Clear();
 
                 if (this.ModelState.IsValid)
                 {
@@ -520,8 +511,8 @@
         [HttpGet]
         public ActionResult ChangeUsername()
         {
-            if (Regex.IsMatch(this.UserProfile.UserName, GlobalConstants.UserNameRegEx) 
-                && this.UserProfile.UserName.Length >= GlobalConstants.UserNameMinLength 
+            if (Regex.IsMatch(this.UserProfile.UserName, GlobalConstants.UserNameRegEx)
+                && this.UserProfile.UserName.Length >= GlobalConstants.UserNameMinLength
                 && this.UserProfile.UserName.Length <= GlobalConstants.UserNameMaxLength)
             {
                 return this.RedirectToAction(GlobalConstants.Index, new { controller = "Profile", area = "Users" });
@@ -534,8 +525,8 @@
         [ValidateAntiForgeryToken]
         public ActionResult ChangeUsername(ChangeUsernameViewModel model)
         {
-            if (Regex.IsMatch(this.UserProfile.UserName, GlobalConstants.UserNameRegEx) 
-                && this.UserProfile.UserName.Length >= GlobalConstants.UserNameMinLength 
+            if (Regex.IsMatch(this.UserProfile.UserName, GlobalConstants.UserNameRegEx)
+                && this.UserProfile.UserName.Length >= GlobalConstants.UserNameMinLength
                 && this.UserProfile.UserName.Length <= GlobalConstants.UserNameMaxLength)
             {
                 return this.RedirectToAction(GlobalConstants.Index, new { controller = "Profile", area = "Users" });
@@ -580,18 +571,13 @@
                                                         user.UserName);
 
             var forgottenPasswordEmailBody = string.Format(
-                                                Resources.Account.AccountEmails.Forgotten_password_body,
-                                                user.UserName,
-                                                this.Url.Action(
-                                                        "ChangePassword",
-                                                        "Account",
-                                                        new { token = user.ForgottenPasswordToken },
-                                                        this.Request.Url.Scheme));
+                Resources.Account.AccountEmails.Forgotten_password_body,
+                user.UserName,
+                this.Url.Action("ChangePassword", "Account", new { token = user.ForgottenPasswordToken }, this.Request.Url.Scheme));
 
             mailSender.SendMail(user.Email, forgottenPasswordEmailTitle, forgottenPasswordEmailBody);
         }
 
-        #region Helpers
         private async Task SignInAsync(UserProfile user, bool isPersistent)
         {
             this.AuthenticationManager.SignOut(DefaultAuthenticationTypes.ExternalCookie);
@@ -610,12 +596,7 @@
         private bool HasPassword()
         {
             var user = this.UserManager.FindById(this.User.Identity.GetUserId());
-            if (user != null)
-            {
-                return user.PasswordHash != null;
-            }
-
-            return false;
+            return user?.PasswordHash != null;
         }
 
         private ActionResult RedirectToLocal(string returnUrl)
@@ -654,6 +635,5 @@
                 context.HttpContext.GetOwinContext().Authentication.Challenge(properties, this.LoginProvider);
             }
         }
-        #endregion
     }
 }

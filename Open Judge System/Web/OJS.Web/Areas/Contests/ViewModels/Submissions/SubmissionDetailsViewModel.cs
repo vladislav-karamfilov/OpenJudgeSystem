@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Linq.Expressions;
-    
+
     using OJS.Common.Extensions;
     using OJS.Data.Models;
 
@@ -55,26 +55,9 @@
 
         public byte[] Content { get; set; }
 
-        public bool IsBinaryFile
-        {
-            get
-            {
-                return !string.IsNullOrWhiteSpace(this.FileExtension);
-            }
-        }
+        public bool IsBinaryFile => !string.IsNullOrWhiteSpace(this.FileExtension);
 
-        public string ContentAsString
-        {
-            get
-            {
-                if (this.IsBinaryFile)
-                {
-                    return "Binary file.";
-                }
-
-                return this.Content.Decompress();
-            }
-        }
+        public string ContentAsString => this.IsBinaryFile ? "Binary file." : this.Content.Decompress();
 
         public DateTime CreatedOn { get; set; }
 

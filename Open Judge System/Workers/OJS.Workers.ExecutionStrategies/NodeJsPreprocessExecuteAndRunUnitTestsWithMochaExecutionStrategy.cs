@@ -16,46 +16,30 @@
         {
             if (!File.Exists(mochaModulePath))
             {
-                throw new ArgumentException(string.Format("Mocha not found in: {0}", mochaModulePath), "mochaModulePath");
+                throw new ArgumentException($"Mocha not found in: {mochaModulePath}", nameof(mochaModulePath));
             }
 
             if (!Directory.Exists(chaiModulePath))
             {
-                throw new ArgumentException(string.Format("Chai not found in: {0}", chaiModulePath), "chaiModulePath");
+                throw new ArgumentException($"Chai not found in: {chaiModulePath}", nameof(chaiModulePath));
             }
 
             this.mochaModulePath = mochaModulePath;
             this.chaiModulePath = this.ProcessModulePath(chaiModulePath);
         }
 
-        protected override string JsCodeRequiredModules
-        {
-            get
-            {
-                return @"
+        protected override string JsCodeRequiredModules => @"
 var chai = require('" + this.chaiModulePath + @"'),
 	assert = chai.assert,
 	expect = chai.expect,
 	should = chai.should()";
-            }
-        }
 
-        protected override string JsCodePreevaulationCode
-        {
-            get
-            {
-                return @"
+        protected override string JsCodePreevaulationCode => @"
 describe('TestScope', function() {
 	it('Test', function(done) {
 		var content = '';";
-            }
-        }
 
-        protected override string JsCodeEvaluation
-        {
-            get
-            {
-                return @"
+        protected override string JsCodeEvaluation => @"
     var inputData = content.trim();
     var result = code.run();
     if (result == undefined) {
@@ -69,8 +53,8 @@ describe('TestScope', function() {
             console[prop] = new Function('');
         });
 
-	testFunc = new Function('assert', 'expect', 'should', ""var result = this.valueOf();"" + inputData);
-    testFunc.call(result, assert, expect, should);
+	testFunc = new Function(" + this.TestFuncVariables + @", ""var result = this.valueOf();"" + inputData);
+    testFunc.call(result, " + this.TestFuncVariables.Replace("'", string.Empty) + @");
 
     Object.keys(bgCoderConsole)
         .forEach(function (prop) {
@@ -78,18 +62,12 @@ describe('TestScope', function() {
         });
 
 	done();";
-            }
-        }
 
-        protected override string JsCodePostevaulationCode
-        {
-            get
-            {
-                return @"
+        protected override string JsCodePostevaulationCode => @"
     });
 });";
-            }
-        }
+
+        protected virtual string TestFuncVariables => "'assert', 'expect', 'should'";
 
         protected override List<TestResult> ProcessTests(ExecutionContext executionContext, IExecutor executor, IChecker checker, string codeSavePath)
         {
@@ -103,7 +81,7 @@ describe('TestScope', function() {
             foreach (var test in executionContext.Tests)
             {
                 var processExecutionResult = executor.Execute(this.NodeJsExecutablePath, test.Input, executionContext.TimeLimit, executionContext.MemoryLimit, arguments);
-                var mochaResult = MochaExecutionResult.Parse(processExecutionResult.ReceivedOutput);
+                var mochaResult = JsonExecutionResult.Parse(processExecutionResult.ReceivedOutput);
                 var testResult = this.ExecuteAndCheckTest(test, processExecutionResult, checker, mochaResult.Passed ? "yes" : string.Format("Unexpected error: {0}", mochaResult.Error));
                 testResults.Add(testResult);
             }

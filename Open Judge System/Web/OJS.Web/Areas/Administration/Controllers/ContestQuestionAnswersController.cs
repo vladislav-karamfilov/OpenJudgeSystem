@@ -64,7 +64,7 @@
             this.UpdateViewModelValues(model, answer);
             model.QuestionId = question.Id;
             model.QuestionText = question.Text;
-            
+
             return this.Json(new[] { model }.ToDataSourceResult(request));
         }
 
@@ -91,7 +91,7 @@
 
             if (question == null)
             {
-                throw new ArgumentException(Resource.No_question_by_id, "id");
+                throw new ArgumentException(Resource.No_question_by_id, nameof(id));
             }
 
             question.Answers.Select(a => a.Id).ToList().Each(a => this.Data.ContestQuestionAnswers.Delete(a));

@@ -2,7 +2,6 @@
 {
     using System.ComponentModel.DataAnnotations;
 
-    using OJS.Common;
     using OJS.Data.Contracts;
 
     public class News : DeletableEntity

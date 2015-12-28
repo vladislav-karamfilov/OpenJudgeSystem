@@ -140,9 +140,10 @@
                 case CompilerType.CPlusPlusGcc:
                     return Settings.CPlusPlusGccCompilerPath;
                 case CompilerType.Java:
+                case CompilerType.JavaZip:
                     return Settings.JavaCompilerPath;
                 default:
-                    throw new ArgumentOutOfRangeException("type");
+                    throw new ArgumentOutOfRangeException(nameof(type));
             }
         }
 
@@ -163,7 +164,7 @@
                 AllowedFileExtensions = submission.SubmissionType.AllowedFileExtensions,
                 CompilerType = submission.SubmissionType.CompilerType,
                 MemoryLimit = submission.Problem.MemoryLimit,
-                TimeLimit = submission.Problem.TimeLimit,
+                TimeLimit = submission.Problem.TimeLimit
             };
 
             context.Tests = submission.Problem.Tests.ToList().Select(x => new TestContext
@@ -234,6 +235,9 @@
                 case ExecutionStrategyType.CompileExecuteAndCheck:
                     executionStrategy = new CompileExecuteAndCheckExecutionStrategy(GetCompilerPath);
                     break;
+                case ExecutionStrategyType.CSharpTestRunner:
+                    executionStrategy = new CSharpTestRunnerExecutionStrategy(GetCompilerPath);
+                    break;
                 case ExecutionStrategyType.NodeJsPreprocessExecuteAndCheck:
                     executionStrategy = new NodeJsPreprocessExecuteAndCheckExecutionStrategy(Settings.NodeJsExecutablePath);
                     break;
@@ -257,6 +261,12 @@
                     break;
                 case ExecutionStrategyType.JavaPreprocessCompileExecuteAndCheck:
                     executionStrategy = new JavaPreprocessCompileExecuteAndCheckExecutionStrategy(Settings.JavaExecutablePath, GetCompilerPath);
+                    break;
+                case ExecutionStrategyType.JavaZipFileCompileExecuteAndCheck:
+                    executionStrategy = new JavaZipFileCompileExecuteAndCheckExecutionStrategy(Settings.JavaExecutablePath, GetCompilerPath);
+                    break;
+                case ExecutionStrategyType.PythonExecuteAndCheck:
+                    executionStrategy = new PythonExecuteAndCheckExecutionStrategy(Settings.PythonExecutablePath);
                     break;
                 case ExecutionStrategyType.PhpCgiExecuteAndCheck:
                     executionStrategy = new PhpCgiExecuteAndCheckExecutionStrategy(Settings.PhpCgiExecutablePath);

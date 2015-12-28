@@ -15,13 +15,14 @@
     using OJS.Common.Extensions;
     using OJS.Data.Contracts;
 
-    public class GenericRepository<T> : IRepository<T> where T : class
+    public class GenericRepository<T> : IRepository<T>
+        where T : class
     {
         public GenericRepository(IOjsDbContext context)
         {
             if (context == null)
             {
-                throw new ArgumentException("An instance of DbContext is required to use this repository.", "context");
+                throw new ArgumentException("An instance of DbContext is required to use this repository.", nameof(context));
             }
 
             this.Context = context;
