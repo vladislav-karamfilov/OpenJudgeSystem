@@ -61,11 +61,8 @@
     <Compile Include="CSharpCompiler.cs" />
     <Compile Include="DotNetDisassembler.cs" />
     <Compile Include="JavaCompiler.cs" />
-<<<<<<< HEAD
     <Compile Include="JavaDisassembler.cs" />
-=======
     <Compile Include="JavaZipCompiler.cs" />
->>>>>>> d950c5b9a0b2cbf3ded04d91a5ec04f92c5b3d8d
     <Compile Include="MsBuildCompiler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
